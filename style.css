@@ -1,0 +1,21 @@
+#background{
+    margin-left: 40px;
+
+}
+body {
+	background-image: url("back7.jpg");
+   	/*background-repeat: no-repeat;
+    background-size: 100% 100%;*/
+}
+.jumbotron{
+	background-color:  #ffe6ee;
+    /*background-image: url("train5.jpg");
+    background-repeat: no-repeat;
+    background-size: 100% 100%;*/
+    color: #002266;
+    font-family: 'Pacifico', cursive;
+    text-align: center;
+}
+#tableform{
+	background-color: #002266;
+}

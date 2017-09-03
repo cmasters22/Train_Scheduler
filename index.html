@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Train Schedule</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+   <link rel="stylesheet" type="text/css" href="style.css">
+  <link href="https://fonts.googleapis.com/css?family=Pacifico" rel="stylesheet">
+ 
+  
+  
+</head>
+
+<body>
+  <div class="container">
+    <div class="col-md-10" id="background">
+    <br>
+    <br>
+      <div class="jumbotron">
+       <h1 class="title">Train Scheduler</h1> 
+        <p>A Comprehensive Guide for your next ride!</p> </div>
+
+
+      <div class="panel panel-primary" id="backgroundbox">
+       <div class="panel-heading" id="tableform">Current Train Schedule</div>
+       <div class="panel-body">
+
+        <div class="table-responsive">          
+         <table class="table">
+          <thead>
+           <tr>
+            <th>Train Name</th>
+            <th>Destination</th>
+            <th>Frequency (min)</th>
+            <th>Next Arrival</th>
+            <th>Minutes Away</th>
+          </tr>
+        </thead>
+        <tbody id="tList">
+          <tr> 
+            <td scope="row" id="display-name" id="backgroundbox"></td>
+            <td id= "display-destination"></td>
+            <td id= "display-frequency"></td>
+            <td id= "display-nArrival"></td>
+            <td id= "display-min-away"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<br>
+
+<div class="panel panel-primary" id="backgroundbox">
+ <div class="panel-heading" id="tableform">Add Train</div>
+ <div class="panel-body">
+
+   <form>
+    <div class="form-group">
+      <label for="name-input">Train Name</label>
+      <input type="text" class="form-control" id="name-input">
+    </div>
+    <div class="form-group">
+      <label for="destination-input">Destination</label>
+      <input type="text" class="form-control" id="destination-input">
+    </div>
+    <div class="form-group">
+      <label for="time-input">First Train Time (HH:mm- military time)</label>
+      <input type="time" class="form-control" id="time-input">
+    </div>
+    <div class="form-group">
+      <label for="frequency-input">Frequency (min)</label>
+      <input type="text" class="form-control" id="frequency-input">
+    </div>
+
+    <button id="submit" type="submit" class="btn btn-default">Submit</button>
+  </form>
+
+</div>
+</div>
+</div>
+
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script type="text/javascript"></script>
+<script src="https://www.gstatic.com/firebasejs/4.3.0/firebase.js"></script>
+<script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyDpq4VYzJ3maJu_ahZ_whoSVJohgNOj-9E",
+    authDomain: "trainproject-6c01c.firebaseapp.com",
+    databaseURL: "https://trainproject-6c01c.firebaseio.com",
+    projectId: "trainproject-6c01c",
+    storageBucket: "",
+    messagingSenderId: "901062324202"
+  };
+  firebase.initializeApp(config);
+
+  var database = firebase.database();
+
+  var name="";
+  var destination="";
+  var time ="0:00 AM";
+  var frequency ="";
+
+  var currentTime = moment();
+  var nArrival = moment(time, 'LT');
+
+$("#submit").on("click", function(){
+
+  event.preventDefault();
+
+  name = $("#name-input").val().trim();
+  destination = $("#destination-input").val().trim();
+  time = $("#time-input").val().trim();
+  frequency = $("#frequency-input").val().trim();
+
+  database.ref().push({
+    name: name,
+    destination: destination,
+    time: time,
+    frequency: frequency
+    });
+
+});
+
+      function NextArrival (fArrival, nfreq){
+          
+      var logTimes = [];
+      var i=0;
+      var stopTrain = moment('22:00', 'LT');
+      var tempTime = moment(fArrival, 'LT');
+      var run = true;
+
+        logTimes[i] = tempTime.format('LT').toString();
+        while (run){
+
+          if ((stopTrain.diff(tempTime, 'm')) > 0) {
+          i++;
+          logTimes[i] = tempTime.add(nfreq, 'm').format('LT').toString();
+        }
+          else{
+             run = false; 
+            }
+        }
+         for (var x=0; x < logTimes.length; x++){
+            if (moment(logTimes[x], 'LT').diff(currentTime, 'm') < 0) 
+            {
+                nArrival = logTimes[x+1];
+            }
+      }
+      if((moment(nArrival, 'LT').format('LT') == '12:00 AM')) {
+        nArrival = logTimes[0];
+      }
+      }   
+
+    database.ref().on("child_added", function (childSnapshot) {
+
+        var fArrival = childSnapshot.val().time;
+        var nfreq = childSnapshot.val().frequency;
+        //calculate NextArrival
+        NextArrival(fArrival, nfreq);
+
+        $("#tList").append("<tr><td>" + childSnapshot.val().name +
+        "</td><td>" + childSnapshot.val().destination +
+        "</td><td>" + childSnapshot.val().frequency +
+        "</td><td>" + nArrival +
+        "</td><td>" + moment(nArrival, 'LT').diff(currentTime, 'm') +
+        "</td></tr>");
+
+      }, function(errorObject) {
+        console.log("The read failed: " + errorObject.code);
+      
+    });
+
+
+  </script>
+  </body>
+  </html>
